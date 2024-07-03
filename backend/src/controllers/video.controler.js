@@ -99,13 +99,22 @@ const deleteVideo = asyncHandler(async (req, res,next) => {
 const getVideo = asyncHandler(async (req, res,next) => {
     
     const { id } = req.params;
+    const userId = req.user.id;
 
     const video = await Video.findById(id);
 
     if (!video) {
       return ApiError(404,"Video not found");
     }
+    const user= await User.findById(userId);
+    if (!user) {
+      return ApiError(404,"User not found");
+    }
+    user.watchHistory.push(video._id);
     video.views+=1;
+    await user.save();
+    await video.save();
+
 
     res.json(new ApiResponse(200,video,"Video fetched successfully"));
 
