@@ -36,7 +36,7 @@ const videoSchema = new Schema({
   },
 });
 
-const Video = model("video", videoSchema);
+const Video = model("Video", videoSchema);
 
 export default Video;
 

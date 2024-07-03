@@ -21,6 +21,6 @@ const commentSchema = new Schema({
   }
 },{timestamps:true});
 
-const Comment = model("comment",commentSchema);
+const Comment = model("Comment",commentSchema);
 
 export default Comment;

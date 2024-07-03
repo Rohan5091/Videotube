@@ -20,7 +20,7 @@ const likeSchema = new Schema({
   },
 },{timestamps:true});
 
-const Like = model('like', likeSchema);
+const Like = model('Like', likeSchema);
 
 export default Like;
 

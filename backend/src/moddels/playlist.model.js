@@ -21,6 +21,6 @@ const playlistSchema = new Schema({
   }
 },{timestamps:true});
 
-const Playlist = model("playlist",playlistSchema);
+const Playlist = model("Playlist",playlistSchema);
 
 export default Playlist;
