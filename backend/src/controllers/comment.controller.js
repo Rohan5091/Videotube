@@ -56,9 +56,18 @@ const removeComment=asyncHandler(async (req,res)=>{
   if (!commentId) {
    return ApiError(404,"commentId is not found");
   }
+  const comment=Comment.findById(commentId);
 
-  await Comment.findByIdAndDelete(commentId);
+  if (!comment) {
+    return ApiError(404,"comment not found");
+  }
 
+  if (comment.owner.toString() !== userId) {
+    return ApiError(401,"you are not authorized to delete this comment");
+  }
+
+  await comment.remove();
+  
   res.json(new ApiResponse(202,"comment deleted successfully"));
 
 });
@@ -76,8 +85,14 @@ const editComment=asyncHandler(async (req,res)=>{
   if (!commentId || !commentText) {
    return ApiError(404,"commentId or commentText is required");
   }
+  const comment= await Comment.findById(commentId);
 
-  await Comment.findByIdAndUpdate(commentId,{content:commentText});
+  if (!comment) {
+    return ApiError(404,"comment not found");
+  }
+  comment.content=commentText;
+
+  await comment.save();
 
   res.json(new ApiResponse(202,"comment updated successfully"));
 

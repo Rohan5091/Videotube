@@ -40,8 +40,11 @@ const createVideo = asyncHandler(async (req, res,next) => {
 
 const updateVideo = asyncHandler(async (req, res,next) => {
     
-  const { id } = req.user.id;
-  const user= await User.findById(id);
+  const userId = req.user.id;
+  if (!userId) {
+    return ApiError(404,"userId is required");
+  }
+  const user= await User.findById(userId);
 
   if (!user) {
     return ApiError(404,"User not found");
@@ -59,9 +62,15 @@ const updateVideo = asyncHandler(async (req, res,next) => {
     return ApiError(401,"You are not authorized to update this video");
   }
   
-  video.title = title;
-  video.description = description;
-  video.isPublished = isPublished;
+  if (title) {
+    video.title = title;
+  }
+  if (description) {
+    video.description = description;
+  }
+  if (isPublished) {
+    video.isPublished = isPublished;
+  }
 
   await video.save();
   
@@ -72,6 +81,9 @@ const updateVideo = asyncHandler(async (req, res,next) => {
 const deleteVideo = asyncHandler(async (req, res,next) => {
     
   const userId = req.user.id;
+  if (!userId) {
+    return ApiError(404,"userId is required");
+  }
   const user= await User.findById(userId);
 
   if (!user) {
@@ -79,7 +91,10 @@ const deleteVideo = asyncHandler(async (req, res,next) => {
   }
 
   const {videoId} = req.body;
-
+  
+  if(!videoId){
+    return ApiError(404,"Video Id is required");
+  }
   const video = await Video.findById(videoId);
 
   if (!video) {
@@ -98,23 +113,25 @@ const deleteVideo = asyncHandler(async (req, res,next) => {
 
 const getVideo = asyncHandler(async (req, res,next) => {
     
-    const { id } = req.params;
+    const { videoId } = req.params;
     const userId = req.user.id;
 
-    const video = await Video.findById(id);
+    const video = await Video.findById(videoId);
 
     if (!video) {
       return ApiError(404,"Video not found");
     }
     const user= await User.findById(userId);
+
     if (!user) {
-      return ApiError(404,"User not found");
+        video.views+=1;
+        await video.save();
+        res.json(new ApiResponse(200,video,"Video fetched successfully"));
     }
     user.watchHistory.push(video._id);
     video.views+=1;
     await user.save();
     await video.save();
-
 
     res.json(new ApiResponse(200,video,"Video fetched successfully"));
 
@@ -130,7 +147,7 @@ const getAllVideosOfUser = asyncHandler(async (req, res,next) => {
     return ApiError(404,"User not found");
   }
 
-  const allVideo=await Video.find(owner=userId);
+  const allVideo=await Video.find({owner:userId});
 
   res.json(ApiResponse(201,allVideo,"All videos detail"));
 
@@ -138,7 +155,7 @@ const getAllVideosOfUser = asyncHandler(async (req, res,next) => {
 
 const getAllVideos=asyncHandler(async (req,res)=>{
    
-   const allVideos=await Video.find();
+   const allVideos=await Video.find({});
 
    if (!allVideos) {
      return ApiError(502,"server error");

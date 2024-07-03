@@ -41,8 +41,15 @@ const removeTweet=asyncHandler(async (req,res)=>{
    return ApiError(404,"tweetId is not found");
   }
 
-  await Tweet.findByIdAndDelete(tweetId);
+  const tweet=await Tweet.findById(tweetId);
 
+  if (!tweet) {
+    return ApiError(404,"tweet not found");
+  }
+  if(tweet.owner.toString()!==userId.toString()){
+    return ApiError(401,"You are not authorized to delete this tweet");
+  }
+  await tweet.remove();
   res.json(new ApiResponse(202,"Tweet deleted successfully"));
 
 });
@@ -61,8 +68,16 @@ const editTweet=asyncHandler(async (req,res)=>{
   if (!tweetId || !TweetText) {
    return ApiError(404,"tweetId or TweetText is required");
   }
+  const tweet=await Tweet.findById(tweetId);
 
-  const tweet=await Tweet.findByIdAndUpdate(tweetId,{content:TweetText});
+  if (!tweet) {
+    return ApiError(404,"tweet not found");
+  }
+  if(tweet.owner.toString()!==userId.toString()){
+    return ApiError(401,"You are not authorized to delete this tweet");
+  }
+  tweet.TweetText=TweetText;
+  await tweet.save();
 
   res.json(new ApiResponse(202,tweet,"Tweet updated successfully"));
 
