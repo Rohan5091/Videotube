@@ -34,7 +34,7 @@ const createVideo = asyncHandler(async (req, res,next) => {
       const newVideo = new Video(video);
       await newVideo.save();
 
-      ApiResponse(201,"Video created successfully",newVideo);
+     res.json(new ApiResponse(201,newVideo,"Video created successfully")) ;
 
 });
 
@@ -65,7 +65,7 @@ const updateVideo = asyncHandler(async (req, res,next) => {
 
   await video.save();
   
-   ApiResponse(201,"Video created successfully",video);
+   res.json(new ApiResponse(201,video,"Video created successfully"));
 
 });
 
@@ -92,7 +92,7 @@ const deleteVideo = asyncHandler(async (req, res,next) => {
 
    await video.remove();
 
-   ApiResponse(201,"Video created successfully",video);
+   res.json(new ApiResponse(201,null,"Video removed successfully"));
 
 });
 
@@ -107,7 +107,7 @@ const getVideo = asyncHandler(async (req, res,next) => {
     }
     video.views+=1;
 
-    ApiResponse(200,"Video fetched successfully",video);
+    res.json(new ApiResponse(200,video,"Video fetched successfully"));
 
 });
 
@@ -123,7 +123,7 @@ const getAllVideosOfUser = asyncHandler(async (req, res,next) => {
 
   const allVideo=await Video.find(owner=userId);
 
-  ApiResponse(201,"All videos detail",allVideo);
+  res.json(ApiResponse(201,allVideo,"All videos detail"));
 
 });
 
@@ -132,14 +132,12 @@ const getAllVideos=asyncHandler(async (req,res)=>{
    const allVideos=await Video.find();
 
    if (!allVideos) {
-      ApiError(502,"server error");
+     return ApiError(502,"server error");
    }
 
-   ApiResponse(202,"All videos detels",allVideos);
+   res.json(ApiResponse(202,allVideos,"All videos detels"));
 
 });
-
-
 
 
 export { createVideo, getVideo, updateVideo,deleteVideo,getAllVideosOfUser,getAllVideos};
