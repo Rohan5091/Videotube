@@ -1,9 +1,9 @@
-import Like from "../moddels/like.model";
-import User from "../moddels/user.model";
-import Video from "../moddels/video.model";
-import ApiError from "../utils/ApiError";
-import ApiResponse from "../utils/ApiResponse";
-import asyncHandler from "../utils/asyncHandler";
+import Like from "../moddels/like.model.js";
+import User from "../moddels/user.model.js";
+import Video from "../moddels/video.model.js";
+import ApiError from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 const likeOnVideo=asyncHandler(async(req,res)=>{
    const userId=req.user.id

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createVideo, deleteVideo, getAllVideos, getAllVideosOfUser, getVideo, updateVideo } from "../controllers/video.controler";
+import { createVideo, deleteVideo, getAllVideos, getAllVideosOfUser, getVideo, updateVideo } from "../controllers/video.controler.js";
 
 const route=Router();
 

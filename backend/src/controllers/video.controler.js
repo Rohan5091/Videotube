@@ -1,8 +1,8 @@
-import asyncHandler from "../utils/asyncHandler";
-import User from "../models/User.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import Video from "../moddels/video.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import User from "../moddels/user.model.js";
 
 const createVideo = asyncHandler(async (req, res,next) => {
     

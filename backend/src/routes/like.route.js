@@ -1,5 +1,5 @@
 import {Router} from "express";
-import { likeOnComment, likeOnTweet, likeOnVideo } from "../controllers/like.controller";
+import { likeOnComment, likeOnTweet, likeOnVideo } from "../controllers/like.controller.js";
 
 const likeRoute=Router();
 

@@ -1,7 +1,7 @@
-import Subscription from "../moddels/subscription.model";
-import ApiError from "../utils/ApiError";
-import ApiResponse from "../utils/ApiResponse";
-import asyncHandler from "../utils/asyncHandler";
+import Subscription from "../moddels/subscription.model.js";
+import ApiError from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 const subscribe=asyncHandler(async (req,res)=>{
    const userId=req.user.id;
