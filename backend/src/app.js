@@ -8,9 +8,11 @@ import likeRouter from "./routes/like.route.js";
 import subscriptionRouter from "./routes/subscription.route.js";
 import userRouter from "./routes/user.route.js";
 import ApiError from "./utils/ApiError.js";
+import jwt from "jsonwebtoken";
 
 
 const app=express();
+
 
 app.use(
   cors({
@@ -30,6 +32,9 @@ app.use("/api/v1/tweet/",tweetRouter);
 app.use("/api/v1/like/",likeRouter);
 app.use("/api/v1/subscription/",subscriptionRouter);
 app.use("/api/v1/user/",userRouter);
+app.use("/api/v1/check",async (req,res)=>{
+  
+})
 app.use("*",(req,res,next)=>{
    throw new ApiError(404,"route not found");
 })

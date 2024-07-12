@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 const userSchema = mongoose.Schema(
   {
     userName: {
@@ -29,15 +30,12 @@ const userSchema = mongoose.Schema(
       select: false,
     },
     avatar: {
-      public_id: {
-        type: String,
-      },
-      secure_url: {
-        type: String,
-      },
+      type: String,
+      required: [true, "avatar is required"],
     },
     refreshToken: {
       type: String,
+      select: false
     },
     coverImage: {
       type: String,
@@ -52,40 +50,50 @@ const userSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.pre("save", function (next) {
+userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
-  this.password = bcrypt.hash(this.password, 10);
+  this.password =await bcrypt.hash(this.password, 10);
   next();
 });
 
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
-
-userSchema.methods.generateRefreshToken = function () {
-  return 
-  jwt.sign({ 
-    id: this._id,
-   }, 
-    process.env.REFRESH_TOKEN_SECRET, 
-    {
-    expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRE,
-  });
+userSchema.methods.generateRefreshToken = async function () {
+  try {
+    const token=await jwt.sign({ 
+      id: this._id,
+     }, 
+      process.env.ACCESS_TOKEN_SECRET, 
+      {
+        expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRE,
+    });
+    return token;
+   
+  } catch (error) {
+    console.log(error.message);
+  }
 };
-userSchema.methods.generateAccessToken = function () {
-  return 
-  jwt.sign({ 
-    id: this._id,
-    email: this.email,
-    userName: this.userName,
-    fullName: this.fullName,
-   }, 
-    process.env.ACCESS_TOKEN_SECRET, 
-    {
-    expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRE,
-  });
+userSchema.methods.generateAccessToken=async function () {
+   try {
+     const token=await jwt.sign({ 
+       id: this._id,
+       email: this.email,
+       userName: this.userName,
+       fullName: this.fullName,
+      }, 
+       process.env.ACCESS_TOKEN_SECRET, 
+       {
+         expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRE,
+     });
+     return token;
+    
+   } catch (error) {
+     console.log(error.message);
+   }
+   
 };
 
 const User = mongoose.model("User", userSchema);
