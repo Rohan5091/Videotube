@@ -4,7 +4,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import {emailValidate,passwordValidate} from "../constants.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js";
-import fs from "fs";
+
 
 
 const createAcount =asyncHandler(async(req,res)=>{
@@ -159,7 +159,7 @@ const logout=asyncHandler(async(req,res)=>{
 });
 
 const getProfile=asyncHandler(async(req,res)=>{
-    const userId=req.user._id;
+    const userId=req.user.id;
      if(!userId){
         throw new ApiError(500,"userId is required");
      }
@@ -176,7 +176,7 @@ const getProfile=asyncHandler(async(req,res)=>{
 });
 
 const editProfile=asyncHandler(async(req,res)=>{
-    const userId=req.user._id;
+    const userId=req.user.id;
     const {userName,fullName,oldPassword,newPassword}=req.body;
     const user=await User.findById(userId).select("+password");
     if(!user){
