@@ -10,7 +10,7 @@ userRouter.post("/register",upload.fields([
 ]),createAcount)
 
 userRouter.post("/login",login);
-userRouter.get("/logout",logout);
+userRouter.get("/logout",isloggedIn,logout);
 userRouter.get("/profile",isloggedIn,getProfile);
 userRouter.put("/editProfile",isloggedIn,editProfile);
 

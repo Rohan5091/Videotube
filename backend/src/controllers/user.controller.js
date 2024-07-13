@@ -73,14 +73,17 @@ const createAcount =asyncHandler(async(req,res)=>{
 
     res.cookie("accessToken",accessToken,{
         httpOnly:true,
-        sameSite:true,
+        secure:true
+    });
+
+    res.cookie("refreshToken",refreshToken,{
+        httpOnly:true,
         secure:true
     });
 
     user.refreshToken=refreshToken;
     await user.save();
     user.password=undefined;
-    user.refreshToken=undefined;
    
     
     res.json(new ApiResponse(201,user,"User created successfully"));
@@ -88,25 +91,27 @@ const createAcount =asyncHandler(async(req,res)=>{
 
 const login=asyncHandler(async(req,res)=>{  
 
-    const {email,password}=req.body;
+    const {userName,email,password}=req.body;
     
     
-    if (!email || !password) {
-        throw new ApiError(404,"All fields are required");
+    if (!email && !userName) {
+        throw new ApiError(404,"user Name or email is requird");
     }
     
     if (password.length < 6) {
       throw new ApiError(404,"Password must be at least 6 characters");
     }
-   if (!email.match(emailValidate)) {
+   if (email && !email.match(emailValidate)) {
      throw new ApiError(404,"Enter correct email formate");
    }
    
-//    if (!password.match(passwordValidate)) {
-//      throw new ApiError(404,"Enter correct password formate");
-//    }
+   if (!password.match(passwordValidate)) {
+     throw new ApiError(404,"Enter correct password formate");
+   }
 
-    const user=await User.findOne({email}).select("+password");
+    const user=await User.findOne({
+        $or:[{email},{userName}]
+    }).select("+password");
 
     if (!user) {
         throw new ApiError(404,"User not found");
@@ -129,6 +134,11 @@ const login=asyncHandler(async(req,res)=>{
         secure:true
     });
 
+    res.cookie("refreshToken",refreshToken,{
+        httpOnly:true,
+        secure:true
+    });
+
     user.refreshToken=refreshToken;
     await user.save();
     user.password=undefined;
@@ -138,12 +148,18 @@ const login=asyncHandler(async(req,res)=>{
 });
 
 const logout=asyncHandler(async(req,res)=>{
-    res.clearCookie("accessToken");
+    const userId=req.user.id;
+    const user=await User.findById(userId);
+    if (!user) throw new ApiError(404,"unauthorised Access");
+    user.refreshToken="";
+    await user.save();
+    req.cookies.accessToken && res.clearCookie("accessToken");
+    req.cookies.refreshToken && res.clearCookie("refreshToken");
     res.json(new ApiResponse(200,"User logout successfully"));
 });
 
 const getProfile=asyncHandler(async(req,res)=>{
-    const userId=req.user.id;
+    const userId=req.user._id;
      if(!userId){
         throw new ApiError(500,"userId is required");
      }
@@ -160,7 +176,7 @@ const getProfile=asyncHandler(async(req,res)=>{
 });
 
 const editProfile=asyncHandler(async(req,res)=>{
-    const userId=req.user.id;
+    const userId=req.user._id;
     const {userName,fullName,oldPassword,newPassword}=req.body;
     const user=await User.findById(userId).select("+password");
     if(!user){
@@ -213,7 +229,6 @@ const editProfile=asyncHandler(async(req,res)=>{
         const coverImage = await uploadOnCloudinary(coverImageFilePath);
         user.coverImage = coverImage.url;
         }
-    console.log(user);
     await user.save();
     user.password=undefined;
     res.json(new ApiResponse(200,user,"user details edited successfully"));
