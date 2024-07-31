@@ -47,8 +47,7 @@ const createAcount =asyncHandler(async(req,res)=>{
         throw new ApiError(404,"Avatar is required");  
     }
     const avatar=await uploadOnCloudinary(avatarFilePath);
-    console.log(avatar);
-
+   
     //if 'coverImage' is provided, upload it to Cloudinary
     const coverImage=coverImageFilePath ? await uploadOnCloudinary(coverImageFilePath): "";
     
@@ -153,8 +152,12 @@ const logout=asyncHandler(async(req,res)=>{
     if (!user) throw new ApiError(404,"unauthorised Access");
     user.refreshToken="";
     await user.save();
-    req.cookies.accessToken && res.clearCookie("accessToken");
-    req.cookies.refreshToken && res.clearCookie("refreshToken");
+    const option={
+        secure:true,
+        httpOnly:true
+    }
+    req.cookies.accessToken && res.clearCookie("accessToken",option);
+    req.cookies.refreshToken && res.clearCookie("refreshToken",option);
     res.json(new ApiResponse(200,"User logout successfully"));
 });
 

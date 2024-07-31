@@ -3,31 +3,54 @@ import ApiError from "../utils/ApiError.js";
 import Video from "../moddels/video.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import User from "../moddels/user.model.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const createVideo = asyncHandler(async (req, res,next) => {
     
-     const { id } = req.user.id;
-      
-     const user= await User.findById(id);
-
+     const userId = req.user._id;
+     
+     const user= await User.findById(userId);
+    
      if (!user) {
-       return ApiError(404,"User not found");
+        throw new ApiError(404,"User not found");
      }
 
-     const { videoFile, thumbnail, title, description, category ,isPublished} = req.body;
+     const { title, description, category ,isPublished} = req.body;
 
-     if (!videoFile || !thumbnail || !title || !description || !category) {
-       return ApiError(400,"Please fill in all fields");
+     if (!title || !description || !category) {
+       throw new ApiError(400,"Please fill in all fields");
       };
+
+      if (!req.files.videoFile || req.files.videoFile.length===0) {
+         throw new ApiError(400,"videoFile field is required"); 
+      }
+
+      if (!req.files.thumbnail || req.files.thumbnail.length===0) {
+         throw new ApiError(400,"thumbnail field is required"); 
+      }
+       
+      const thumbnailPath=req.files.thumbnail[0].path;
+      const videoFilePath=req.files.videoFile[0].path;
+
+      if (!videoFilePath || !thumbnailPath) {
+        throw new ApiError(500,"videoFilePath or thumbnailPath not found "); 
+      }
+       
+      const thumbnail= await uploadOnCloudinary(thumbnailPath);
+      const videoFile= await uploadOnCloudinary(videoFilePath);
+      
+      if (!(videoFile && videoFile.url ) || !(thumbnail && thumbnail.url)) {
+        throw new ApiError(500,"cloudinary error"); 
+      }
 
 
       const video = {
-        videoFile,
-        thumbnail,
+        vodeoFile: videoFile.url,
+        thumbnail: thumbnail.url,
         title,
         description,
         category,
-        owner: id,
+        owner: userId,
         isPublished,
       };
 
@@ -40,31 +63,32 @@ const createVideo = asyncHandler(async (req, res,next) => {
 
 const updateVideo = asyncHandler(async (req, res,next) => {
     
-  const userId = req.user.id;
+  const userId = req.user._id;
   if (!userId) {
     return ApiError(404,"userId is required");
   }
   const user= await User.findById(userId);
 
   if (!user) {
-    return ApiError(404,"User not found");
+    throw new ApiError(404,"User not found");
   }
 
   const { title, description,isPublished,videoId} = req.body;
-
   const video = await Video.findById(videoId);
 
   if (!video) {
-    return ApiError(404,"Video not found");
+    throw new ApiError(404,"Video not found");
   }
+  
 
-  if(video.owner.toString() !== id){
-    return ApiError(401,"You are not authorized to update this video");
+  if(video?.owner.toString() !== userId.toString()){
+    throw new ApiError(401,"You are not authorized to update this video");
   }
   
   if (title) {
     video.title = title;
   }
+
   if (description) {
     video.description = description;
   }
@@ -73,60 +97,59 @@ const updateVideo = asyncHandler(async (req, res,next) => {
   }
 
   await video.save();
-  
    res.json(new ApiResponse(201,video,"Video created successfully"));
 
 });
 
 const deleteVideo = asyncHandler(async (req, res,next) => {
     
-  const userId = req.user.id;
+  const userId = req.user._id;
   if (!userId) {
-    return ApiError(404,"userId is required");
+    throw new  ApiError(404,"userId is required");
   }
   const user= await User.findById(userId);
 
   if (!user) {
-    return ApiError(404,"User not found");
+    throw new  ApiError(404,"User not found");
   }
 
   const {videoId} = req.body;
   
   if(!videoId){
-    return ApiError(404,"Video Id is required");
+    throw new  ApiError(404,"Video Id is required");
   }
   const video = await Video.findById(videoId);
 
   if (!video) {
-    return ApiError(404,"Video not found");
+    throw new  ApiError(404,"Video not found");
   }
 
-  if(video.owner.toString() !== id){
-    return ApiError(401,"You are not authorized to update this video");
+  if(video.owner.toString() !== userId.toString()){
+    throw new  ApiError(401,"You are not authorized to update this video");
   }
-
-   await video.remove();
-
+  await video.deleteOne()
+  
    res.json(new ApiResponse(201,null,"Video removed successfully"));
 
 });
 
 const getVideo = asyncHandler(async (req, res,next) => {
     
-    const { videoId } = req.params;
-    const userId = req.user.id;
+    const { videoId } = req.query;
+    const {userId} = req.body;
 
     const video = await Video.findById(videoId);
 
     if (!video) {
-      return ApiError(404,"Video not found");
+      throw new  ApiError(404,"Video not found");
     }
     const user= await User.findById(userId);
 
     if (!user) {
-        video.views+=1;
-        await video.save();
-        res.json(new ApiResponse(200,video,"Video fetched successfully"));
+        // video.views+=1;
+        // await video.save();
+        // res.json(new ApiResponse(200,video,"Video fetched successfully"));
+      throw new  ApiError(404,"user not found");
     }
     user.watchHistory.push(video._id);
     video.views+=1;
@@ -140,16 +163,15 @@ const getVideo = asyncHandler(async (req, res,next) => {
 const getAllVideosOfUser = asyncHandler(async (req, res,next) => {
 
   const { userId } = req.body;
-
   const user= await User.findById(userId);
 
   if (!user) {
-    return ApiError(404,"User not found");
+    throw new  ApiError(404,"User not found");
   }
 
   const allVideo=await Video.find({owner:userId});
 
-  res.json(ApiResponse(201,allVideo,"All videos detail"));
+  res.json(new ApiResponse(201,allVideo,"All videos detail"));
 
 });
 
@@ -158,10 +180,10 @@ const getAllVideos=asyncHandler(async (req,res)=>{
    const allVideos=await Video.find({});
 
    if (!allVideos) {
-     return ApiError(502,"server error");
+    throw new  ApiError(502,"server error");
    }
 
-   res.json(ApiResponse(202,allVideos,"All videos detels"));
+   res.json(new ApiResponse(202,allVideos,"All videos detels"));
 
 });
 

@@ -5,6 +5,7 @@ import User from "../moddels/user.model.js";
 
 const isloggedIn = asyncHandler(async(req,res,next)=>{
    try {
+
       const token=req.cookies?.accessToken || req.header("Authorisation")?.replace("Bearer ","")
       if (!token) throw new ApiError(404,"Access token not found");
       const tokenData=jwt.verify(token,process.env.ACCESS_TOKEN_SECRET);
@@ -19,3 +20,4 @@ const isloggedIn = asyncHandler(async(req,res,next)=>{
 })
 
 export { isloggedIn };
+
